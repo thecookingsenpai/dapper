@@ -28,30 +28,39 @@ else:
         abi = "[]"
 
 # Preparing the environment
-filename = "ultraswap.sol"
+
 filename_js = filename.replace(".sol", ".js")
 
 if os.path.exists(filename_js):
     os.remove(filename_js)
 js_file =  open(filename_js, "a+")
-
+js_file.write("var abi;\n")
 # Invoking
-abi_string = "let abi = '" + abi.replace("\n", "") + "'"
-invocation = abi_string + "\nlet contract = new ethers.Contract(" + address + ", JSON.parse(abi), signer);\n\n"
-js_file.write(invocation)
 
 with open(filename, "r") as source:
     lines = source.readlines()
     
 line_buffer = ""
+prefix = ""
 for index in range(len(lines)):
+    print("Processing line " + str(index) + " of " + str(len(lines)))
     line = lines[index].strip()
-    
+    # Compatibility with interfaces and contracts
+    if "interface" in line or "contract" in line:
+        if "/" in line:
+            continue
+        if not " is " in line:
+            prefix = line.split("{")[0].strip().split(" ")[-1]
+        else:
+            prefix = line.split("{")[0].strip().split(" is ")[0].split(" ")[-1]
+        abi_string = "abi = '" + abi.replace("\n", "") + "'"
+        invocation = abi_string + "\nlet " + prefix + " = new ethers.Contract(" + address + ", JSON.parse(abi), signer);\n\n"
+        js_file.write(invocation)
     # Spotting functions
     if "function" in line:
         line_buffer += line
         # Reading them until the { token
-        while not "{" in line:
+        while not "{" in line and not ";" in line:
             index += 1
             line = lines[index]
             line_buffer += line
@@ -77,15 +86,23 @@ for index in range(len(lines)):
             print("NAME: " + fname)
             print("ARGS (" + str(arg_num) + ") :" + str(args))
             # Building the js equivalent
-            js_function = "async function " + fname + "("
+            js_function = "async function " + prefix + "_" + fname + "("
             argtypes = "//( "
             counter = 0
             call_args = ""
             # Writing arguments in js
             for arg in args:
+                arg = arg.strip()
+                if arg == "":
+                    continue
+                print("Working on " + arg)
                 counter += 1
-                argname = arg.split(" ")[1]
-                argtypes += arg.split(" ")[0] + " "
+                if not " " in arg:
+                    argname = "argument_" + str(counter)
+                    argtypes += arg + " "
+                else:
+                    argname = arg.split(" ")[1]
+                    argtypes += arg.split(" ")[0] + " "
                 call_args += argname + ", "
                 js_function += argname + ", "
             if (counter > 0):
