@@ -1,6 +1,7 @@
 import os
 from sys import argv as arguments
 
+
 # Getting the filename
 if len(arguments) < 2:
     print("[x] Usage: python3 dapper.py <file.sol> [<address> <abifile.json>]")
@@ -117,7 +118,7 @@ for index in range(len(lines)):
             js_function += ") {\n\t"
             print("Obtained " + js_function)
             # Calling the contract
-            js_function += "let result = await contract." + fname + "("
+            js_function += "let result = await " + prefix + "." + fname + "("
             # Adding arguments to the call
             js_function += call_args + ");\n"
             # If is a view or pure, returns the result
