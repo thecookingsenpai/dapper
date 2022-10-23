@@ -73,14 +73,17 @@ for index in range(len(lines)):
                 line_buffer = line_buffer.replace("  ", " ")
             # Getting name and arguments if any
             fname = line_buffer.split("function")[1].split("(")[0].strip()
+            print("Function " + fname)
             args = line_buffer.split("(")[1].split(")")[0].strip().replace("\n", "")
+            print("Raw arguments " + str(args))
             # Splitting arguments if needed
             try:
-                args = args.split(", ")
+                args = args.split(",")
                 arg_num = len(args)
             except:
                 args = []
                 arg_num = 0
+            print("We have " + str(arg_num) + " arguments")
             # Logging to user
             print("PUBLIC: " + line_buffer)
             print("NAME: " + fname)
@@ -90,25 +93,29 @@ for index in range(len(lines)):
             argtypes = "//( "
             counter = 0
             call_args = ""
+            print("Working on " + str(args))
             # Writing arguments in js
             for arg in args:
                 arg = arg.strip()
+                print("Now on " + arg)
                 if arg == "":
                     continue
-                print("Working on " + arg)
                 counter += 1
                 if not " " in arg:
                     argname = "argument_" + str(counter)
                     argtypes += arg + " "
                 else:
-                    argname = arg.split(" ")[1]
+                    argname = arg.split(" ")[-1]
                     argtypes += arg.split(" ")[0] + " "
                 call_args += argname + ", "
                 js_function += argname + ", "
             if (counter > 0):
                 call_args = call_args[:-2]
             # Opening the method
-            js_function += call_args + ") {\n\t"
+            print("Arguments are " + call_args)
+            print("Adding them to " + fname)
+            js_function += ") {\n\t"
+            print("Obtained " + js_function)
             # Calling the contract
             js_function += "let result = await contract." + fname + "("
             # Adding arguments to the call
